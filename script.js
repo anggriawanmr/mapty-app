@@ -76,13 +76,17 @@ class App {
   #mapEvent;
   #workouts = [];
 
+  // prettier-ignore
   constructor() {
+    //Get User Position
     this._getPosition();
 
+    //Get data from local storage
+    this._getLocalStorage();
+
+    //Attach event handler
     form.addEventListener('submit', this._newWorkOut.bind(this));
-
     inputType.addEventListener('change', this._toggleElevationField);
-
     containerWorkouts.addEventListener('click', this._moveToPopup.bind(this));
   }
 
@@ -110,6 +114,8 @@ class App {
     }).addTo(this.#map);
 
     this.#map.on('click', this._showForm.bind(this));
+
+    this.#workouts.forEach(work => this._renderWorkoutMarker(work));
   }
 
   _showForm(mapE) {
@@ -134,6 +140,7 @@ class App {
     inputCadence.closest('.form__row').classList.toggle('form__row--hidden');
   }
 
+  //prettier-ignore
   _newWorkOut(e) {
     const validInput = (...inputs) => inputs.every(inp => Number.isFinite(inp));
     const allPositive = (...inputs) => inputs.every(inp => inp > 0);
@@ -187,6 +194,9 @@ class App {
 
     // Hide form + Clear Input Fields
     this._hideForm();
+
+    // Set local storage to all workouts
+    this._setLocalStorage();
   }
   _renderWorkoutMarker(workout) {
     L.marker(workout.coords)
@@ -270,8 +280,27 @@ class App {
       pan: { duration: 1 },
     });
 
-    // Using Public interface
-    workout.click();
+    // using the public interface
+    // workout.click();
+  }
+
+  _setLocalStorage() {
+    localStorage.setItem('workouts', JSON.stringify(this.#workouts));
+  }
+
+  _getLocalStorage() {
+    const data = JSON.parse(localStorage.getItem('workouts'));
+
+    if (!data) return;
+
+    this.#workouts = data;
+
+    this.#workouts.forEach(work => this._renderWorkout(work));
+  }
+
+  reset() {
+    localStorage.removeItem('workouts');
+    location.reload();
   }
 }
 
